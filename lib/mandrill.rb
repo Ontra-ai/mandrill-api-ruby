@@ -38,7 +38,7 @@ module Mandrill
           r = @session.post(:path => "#{@path}#{url}.json", :headers => {'Content-Type' => 'application/json'}, :body => params)
           JSON.parse(r.body)
         rescue
-          raise cast_error(r.body) if (r.status != 200 && retry_count >= MAX_RETRY)
+          cast_error(r.body) if retry_count >= MAX_RETRY
           sleep 2**retry_count
           retry_count += 1
           retry
