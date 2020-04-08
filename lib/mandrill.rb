@@ -29,13 +29,19 @@ module Mandrill
             @apikey = apikey
         end
 
+        MAX_RETRY = 3
+
         def call(url, params={})
-            params[:key] = @apikey
-            params = JSON.generate(params)
-            r = @session.post(:path => "#{@path}#{url}.json", :headers => {'Content-Type' => 'application/json'}, :body => params)
-            
-            cast_error(r.body) if r.status != 200
-            return JSON.parse(r.body)
+          retry_count ||= 0
+          params[:key] = @apikey
+          params = JSON.generate(params)
+          r = @session.post(:path => "#{@path}#{url}.json", :headers => {'Content-Type' => 'application/json'}, :body => params)
+          JSON.parse(r.body)
+        rescue
+          cast_error(r.body) if retry_count >= MAX_RETRY
+          sleep 2**retry_count
+          retry_count += 1
+          retry
         end
 
         def read_configs()
